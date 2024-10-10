@@ -2,8 +2,9 @@
 // Created by gl on 24.05.24.
 //
 
-#ifndef GSMCAN_CAN_H
-#define GSMCAN_CAN_H
+#ifndef CAN_H
+#define CAN_H
+#include "main.h"
 
 typedef struct {
     uint32_t CanPort;
@@ -15,8 +16,11 @@ typedef struct {
 
 #define CAN_DIAG_ID 0x707
 
-#define HSCAN_BCM_SWM 0x303
+#define HSCAN_BCM_SWM 0x030
+#define HSCAN_PCM_SPD 0x060
+#define HSCAN_PCM_STATUS 0x0C0
 
 void can_setup(void);
+void CAN_Transmit(canMsg *msg);
 
-#endif //GSMCAN_CAN_H
+#endif //CAN_H

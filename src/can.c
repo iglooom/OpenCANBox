@@ -6,6 +6,7 @@
 #include "can.h"
 #include "gpio.h"
 #include "event_groups.h"
+#include "filters.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/can.h>
@@ -16,6 +17,11 @@ QueueHandle_t canRxQueue;
 
 void can_tx_task(void *arg);
 void can_rx_task(void *arg);
+
+extern uint8_t ACC_LimitSpeed;
+extern uint8_t ACC_StandByMode;
+extern uint8_t ACC_LimMode;
+extern uint8_t ACC_CruiseMode;
 
 void can_setup()
 {
@@ -72,8 +78,8 @@ void can_setup()
                  false,           /* RFLM: Receive FIFO locked mode? */
                  true,           /* TXFP: Transmit FIFO priority? */
                  CAN_BTR_SJW_1TQ,
-                 CAN_BTR_TS1_13TQ,
-                 CAN_BTR_TS2_2TQ,
+                 CAN_BTR_TS1_8TQ,
+                 CAN_BTR_TS2_7TQ,
                  4,
                  false,
                  false))             /* BRP+1: Baud rate prescaler */
@@ -107,8 +113,8 @@ void can_setup()
     can_filter_id_list_16bit_init(
             0,
             (HSCAN_BCM_SWM << 5),
-            (HSCAN_BCM_SWM << 5),
-            (HSCAN_BCM_SWM << 5),
+            (HSCAN_PCM_SPD << 5),
+            (HSCAN_PCM_STATUS << 5),
             (CAN_DIAG_ID << 5),
             0,
             true);
@@ -141,8 +147,30 @@ static void can_rx_isr(uint32_t canport)
     can_receive(canport, 0, true, (uint32_t*)&msg.Id, &ext, &rtr, &fmi, &msg.DLC, msg.Data, NULL);
 
     msg.CanPort = canport;
-    xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);
-    portYIELD_FROM_ISR(xTaskWokenByReceive);
+    switch (msg.Id) {
+        case HSCAN_PCM_SPD:
+            ACC_LimitSpeed = ((CruiseSpeed*)msg.Data)->Speed;
+            break;
+        case HSCAN_PCM_STATUS:
+            ACC_StandByMode = ((PCMStatus*)msg.Data)->Cruise_StandBy;
+            switch (((PCMStatus*)msg.Data)->Cruise_Mode) {
+                case 1:
+                    ACC_CruiseMode = 1;
+                    ACC_LimMode = 0;
+                    break;
+                case 3:
+                    ACC_LimMode = 1;
+                    ACC_CruiseMode = 0;
+                    break;
+                default:
+                    ACC_LimMode = 0;
+                    ACC_CruiseMode = 0;
+            }
+            break;
+        default:
+            xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);
+            portYIELD_FROM_ISR(xTaskWokenByReceive);
+    }
 
     can_fifo_release(canport, 0);
 }
@@ -166,6 +194,9 @@ void can_rx_task(void *arg)
         if( xQueueReceive( canRxQueue,&msg,portMAX_DELAY ) == pdPASS )
         {
             switch (msg.Id){
+                case HSCAN_BCM_SWM:
+                    fixACCbuttons(&msg);
+                    break;
                 case 0x707:
                     LED1_TOGGLE();
                     msg.Id = 0x70F;
@@ -188,4 +219,9 @@ void can_tx_task(void *arg)
         }
         vTaskDelay(msg.Delay);
     }
+}
+
+void CAN_Transmit(canMsg *msg)
+{
+    xQueueSend(canTxQueue,msg,10);
 }
