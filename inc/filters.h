@@ -42,8 +42,8 @@ typedef struct {
 typedef struct {
     uint8_t d0b0:3;
     uint8_t Cruise_StandBy:1;
-    uint8_t Cruise_Mode:2; // 1 - ACC, 3 - LIM
-    uint8_t d0b6:2;
+    uint8_t Cruise_Mode:3; // 1 - ACC, 3 - LIM, 4 - Transition to standby
+    uint8_t d0b7:1;
 
     uint8_t d1b0:5;
     uint8_t Ignition:2; // 1 - Ignition ON, 3 - Accessory?

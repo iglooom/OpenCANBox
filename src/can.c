@@ -134,6 +134,8 @@ void can_setup()
 
     xTaskCreate(can_tx_task, "canTx", 128, NULL, configMAX_PRIORITIES-2, NULL);
     xTaskCreate(can_rx_task, "canRx", 128, NULL, configMAX_PRIORITIES-2, NULL);
+
+    CAN_Drv_EN();
 }
 
 static void can_rx_isr(uint32_t canport)
@@ -160,6 +162,8 @@ static void can_rx_isr(uint32_t canport)
                 case 3:
                     Cruise.LimMode = 1;
                     Cruise.CruiseMode = 0;
+                    break;
+                case 4:
                     break;
                 default:
                     Cruise.LimMode = 0;
