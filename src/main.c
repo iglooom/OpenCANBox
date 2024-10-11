@@ -29,7 +29,7 @@ int main() {
 
     gpio_setup();
     can_setup();
-    //xTaskCreate(blink_led, "blink", 128, NULL, configMAX_PRIORITIES-3, NULL);
+   // xTaskCreate(blink_led, "blink", 128, NULL, configMAX_PRIORITIES-3, NULL);
 
     vTaskStartScheduler();
 }

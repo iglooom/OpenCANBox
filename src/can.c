@@ -11,6 +11,7 @@
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/can.h>
 #include <libopencm3/stm32/gpio.h>
+#include "string.h"
 
 QueueHandle_t canTxQueue;
 QueueHandle_t canRxQueue;
@@ -18,13 +19,11 @@ QueueHandle_t canRxQueue;
 void can_tx_task(void *arg);
 void can_rx_task(void *arg);
 
-extern uint8_t ACC_LimitSpeed;
-extern uint8_t ACC_StandByMode;
-extern uint8_t ACC_LimMode;
-extern uint8_t ACC_CruiseMode;
+volatile CruiseState Cruise;
 
 void can_setup()
 {
+    memset(&Cruise,0,sizeof(Cruise));
     canTxQueue = xQueueCreate( 5, sizeof(canMsg) );
     canRxQueue = xQueueCreate( 5, sizeof(canMsg) );
 
@@ -149,22 +148,22 @@ static void can_rx_isr(uint32_t canport)
     msg.CanPort = canport;
     switch (msg.Id) {
         case HSCAN_PCM_SPD:
-            ACC_LimitSpeed = ((CruiseSpeed*)msg.Data)->Speed;
+            Cruise.SetSpeed = ((CruiseSpeed*)msg.Data)->Speed;
             break;
         case HSCAN_PCM_STATUS:
-            ACC_StandByMode = ((PCMStatus*)msg.Data)->Cruise_StandBy;
+            Cruise.StandBy = ((PCMStatus*)msg.Data)->Cruise_StandBy;
             switch (((PCMStatus*)msg.Data)->Cruise_Mode) {
                 case 1:
-                    ACC_CruiseMode = 1;
-                    ACC_LimMode = 0;
+                    Cruise.CruiseMode = 1;
+                    Cruise.LimMode = 0;
                     break;
                 case 3:
-                    ACC_LimMode = 1;
-                    ACC_CruiseMode = 0;
+                    Cruise.LimMode = 1;
+                    Cruise.CruiseMode = 0;
                     break;
                 default:
-                    ACC_LimMode = 0;
-                    ACC_CruiseMode = 0;
+                    Cruise.LimMode = 0;
+                    Cruise.CruiseMode = 0;
             }
             break;
         default:
@@ -223,5 +222,5 @@ void can_tx_task(void *arg)
 
 void CAN_Transmit(canMsg *msg)
 {
-    xQueueSend(canTxQueue,msg,10);
+    xQueueSend(canTxQueue,msg,50);
 }

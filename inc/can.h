@@ -14,6 +14,13 @@ typedef struct {
     uint8_t Delay;
 } canMsg;
 
+typedef struct {
+    uint8_t SetSpeed;
+    uint8_t StandBy:1;
+    uint8_t LimMode:1;
+    uint8_t CruiseMode:1;
+} CruiseState;
+
 #define CAN_DIAG_ID 0x707
 
 #define HSCAN_BCM_SWM 0x030
