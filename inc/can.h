@@ -21,11 +21,127 @@ typedef struct {
     uint8_t CruiseMode:1;
 } CruiseState;
 
+typedef struct {
+    uint8_t Ignition:1;
+    uint8_t DesiredGear;
+    uint8_t ActualGear;
+    uint8_t ShifterPosition;
+    uint16_t BatteryCurrent;
+} CarStatus;
+
+// ACC - Adaptive cruise buttons
+// CC - Standard cruise buttons
+typedef struct {
+    uint8_t d0;
+
+    uint8_t d1b0:5;
+    uint8_t ACC_Lim:1;
+    uint8_t ACC_Res_Plus:1;
+    uint8_t d1b7:1;
+
+    uint8_t d2;
+    uint8_t d3;
+
+    uint8_t ACC_Set_Minus:1; // CC_Set_Minus also
+    uint8_t ACC_Dist_Plus:1;
+    uint8_t ACC_Dist_Minus:1;
+    uint8_t d4b4:5;
+
+    uint8_t d5b0:2;
+    uint8_t CC_Cruise:1;
+    uint8_t ACC_Cruise:1;
+    uint8_t CC_Can:1;
+    uint8_t CC_Res:1;
+    uint8_t d5b6:1;
+    uint8_t CC_Set_Plus:1;
+
+    uint8_t d6b0:5;
+    uint8_t CC_Lim:2; // 0x2 - pressed
+    uint8_t d6b7:1;
+
+    uint8_t d7;
+} SWMStatus; // 030
+
+typedef struct {
+    uint8_t d0b0:3;
+    uint8_t Cruise_StandBy:1;
+    uint8_t Cruise_Mode:3; // 1 - ACC, 3 - LIM, 4 - Transition to standby
+    uint8_t d0b7:1;
+
+    uint8_t d1b0:5;
+    uint8_t Ignition:2; // 1 - Ignition ON, 3 - Accessory?
+    uint8_t d1b7:1;
+
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} PCMStatus; // 0C0
+
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t Speed;
+    uint8_t d7;
+} CruiseSpeed; // 060
+
+typedef struct {
+    uint8_t d0;
+
+    uint8_t d1b0:4;
+    uint8_t ActualGear:4; // E - reverse
+
+    uint8_t DesiredGear:4; // E - reverse
+    uint8_t d2b4:4;
+
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} PcmGear; // 0D0
+
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+
+
+    uint8_t d4b0:3;
+    uint8_t ShifterPos:3; // 0-P, 1-R, 2-N, 3-D, 4-S
+
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} PcmShifter; // 0E0
+
+typedef struct {
+    uint8_t d0b0:1;
+    uint16_t Current:15;
+
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} BatCurrent;
+
 #define CAN_DIAG_ID 0x707
 
 #define HSCAN_BCM_SWM 0x030
 #define HSCAN_PCM_SPD 0x060
 #define HSCAN_PCM_STATUS 0x0C0
+#define HSCAN_PCM_GEAR 0x0D0
+#define HSCAN_PCM_SHIFTER 0x0E0
+#define HSCAN_BMS 0x150
 
 void can_setup(void);
 void CAN_Transmit(canMsg *msg);

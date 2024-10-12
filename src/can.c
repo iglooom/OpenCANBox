@@ -16,16 +16,25 @@
 QueueHandle_t canTxQueue;
 QueueHandle_t canRxQueue;
 
+//TimerHandle_t canSleepTimer;
+
 void can_tx_task(void *arg);
 void can_rx_task(void *arg);
 
 volatile CruiseState Cruise;
+volatile CarStatus Car;
+
+void onCanIdle()
+{
+    CAN_Drv_Slp();
+}
 
 void can_setup()
 {
     memset(&Cruise,0,sizeof(Cruise));
     canTxQueue = xQueueCreate( 5, sizeof(canMsg) );
     canRxQueue = xQueueCreate( 5, sizeof(canMsg) );
+//    canSleepTimer = xTimerCreate("canSleep",10000,pdFALSE,( void * ) 0,onCanIdle);
 
     rcc_periph_clock_enable(RCC_AFIO);
     rcc_periph_clock_enable(RCC_CAN1);
@@ -118,6 +127,15 @@ void can_setup()
             0,
             true);
 
+    can_filter_id_list_16bit_init(
+            1,
+            (HSCAN_PCM_GEAR << 5),
+            (HSCAN_PCM_SHIFTER << 5),
+            (HSCAN_BMS << 5),
+            (HSCAN_PCM_GEAR << 5),
+            0,
+            true);
+
     /* CAN filter 0 init. */
     can_filter_id_list_16bit_init(
             14,
@@ -154,6 +172,7 @@ static void can_rx_isr(uint32_t canport)
             break;
         case HSCAN_PCM_STATUS:
             Cruise.StandBy = ((PCMStatus*)msg.Data)->Cruise_StandBy;
+            Car.Ignition = (((PCMStatus*)msg.Data)->Ignition&1);
             switch (((PCMStatus*)msg.Data)->Cruise_Mode) {
                 case 1:
                     Cruise.CruiseMode = 1;
@@ -169,6 +188,16 @@ static void can_rx_isr(uint32_t canport)
                     Cruise.LimMode = 0;
                     Cruise.CruiseMode = 0;
             }
+            break;
+        case HSCAN_PCM_GEAR:
+            Car.ActualGear = ((PcmGear*)msg.Data)->ActualGear;
+            Car.DesiredGear = ((PcmGear*)msg.Data)->DesiredGear;
+            break;
+        case HSCAN_PCM_SHIFTER:
+            Car.ShifterPosition = ((PcmShifter*)msg.Data)->ShifterPos;
+            break;
+        case HSCAN_BMS:
+            Car.BatteryCurrent = ((BatCurrent*)msg.Data)->Current;
             break;
         default:
             xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);

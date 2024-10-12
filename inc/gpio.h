@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-#define CAN_Drv_Pin GPIO12
+#define CAN_Drv_Pin (GPIO12 | GPIO13)
 #define CAN_Drv_Port GPIOB
 
 #define LED1_Pin GPIO12

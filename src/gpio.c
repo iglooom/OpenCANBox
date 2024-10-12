@@ -12,7 +12,7 @@ void gpio_setup()
     rcc_periph_clock_enable(RCC_GPIOB);
 
     gpio_set_mode(LED1_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,LED1_Pin);
-    gpio_set_mode(CAN_Drv_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_OPENDRAIN,CAN_Drv_Pin);
+    gpio_set_mode(CAN_Drv_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,CAN_Drv_Pin);
 }
 
 void CAN_Drv_EN()
