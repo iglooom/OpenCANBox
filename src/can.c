@@ -12,6 +12,7 @@
 #include <libopencm3/stm32/can.h>
 #include <libopencm3/stm32/gpio.h>
 #include "string.h"
+#include <libopencmsis/core_cm3.h>
 
 QueueHandle_t canTxQueue;
 QueueHandle_t canRxQueue;
@@ -136,6 +137,15 @@ void can_setup()
             0,
             true);
 
+    can_filter_id_list_16bit_init(
+            2,
+            (HSCAN_PCM_TEMP << 5),
+            (HSCAN_PCM_TEMP << 5),
+            (HSCAN_PCM_TEMP << 5),
+            (HSCAN_PCM_TEMP << 5),
+            0,
+            true);
+
     /* CAN filter 0 init. */
     can_filter_id_list_16bit_init(
             14,
@@ -197,7 +207,10 @@ static void can_rx_isr(uint32_t canport)
             Car.ShifterPosition = ((PcmShifter*)msg.Data)->ShifterPos;
             break;
         case HSCAN_BMS:
-            Car.BatteryCurrent = ((BatCurrent*)msg.Data)->Current;
+            Car.BatteryCurrent = (int16_t)(((uint16_t)(((BatCurrent*)msg.Data)->CurrentH)<<4) + ((BatCurrent*)msg.Data)->CurrentL - 512);
+            break;
+        case HSCAN_PCM_TEMP:
+            Car.CoolantTemp = ((int16_t)((EngineTemp *)msg.Data)->CoolantTemp) - 60;
             break;
         default:
             xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);

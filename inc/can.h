@@ -26,7 +26,8 @@ typedef struct {
     uint8_t DesiredGear;
     uint8_t ActualGear;
     uint8_t ShifterPosition;
-    uint16_t BatteryCurrent;
+    int16_t BatteryCurrent;
+    int16_t CoolantTemp;
 } CarStatus;
 
 // ACC - Adaptive cruise buttons
@@ -123,8 +124,10 @@ typedef struct {
 } PcmShifter; // 0E0
 
 typedef struct {
-    uint8_t d0b0:1;
-    uint16_t Current:15;
+    uint8_t CurrentH:7;
+    uint8_t d0b7:1;
+    uint8_t d1b0:4;
+    uint8_t CurrentL:4;
 
     uint8_t d2;
     uint8_t d3;
@@ -134,6 +137,17 @@ typedef struct {
     uint8_t d7;
 } BatCurrent;
 
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t CoolantTemp; // value +60
+    uint8_t d6;
+    uint8_t d7;
+} EngineTemp; // 2F0
+
 #define CAN_DIAG_ID 0x707
 
 #define HSCAN_BCM_SWM 0x030
@@ -141,6 +155,7 @@ typedef struct {
 #define HSCAN_PCM_STATUS 0x0C0
 #define HSCAN_PCM_GEAR 0x0D0
 #define HSCAN_PCM_SHIFTER 0x0E0
+#define HSCAN_PCM_TEMP 0x2F0
 #define HSCAN_BMS 0x150
 
 void can_setup(void);
