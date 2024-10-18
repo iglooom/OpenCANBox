@@ -140,8 +140,8 @@ void can_setup()
     can_filter_id_list_16bit_init(
             2,
             (HSCAN_PCM_TEMP << 5),
-            (HSCAN_PCM_TEMP << 5),
-            (HSCAN_PCM_TEMP << 5),
+            (HSCAN_BATT_SOC << 5),
+            (HSCAN_BATT_VOLT << 5),
             (HSCAN_PCM_TEMP << 5),
             0,
             true);
@@ -211,6 +211,13 @@ static void can_rx_isr(uint32_t canport)
             break;
         case HSCAN_PCM_TEMP:
             Car.CoolantTemp = ((int16_t)((EngineTemp *)msg.Data)->CoolantTemp) - 60;
+            break;
+        case HSCAN_BATT_SOC:
+            Car.BatteryCharge = ((BattSoC*)msg.Data)->SoC;
+            break;
+        case HSCAN_BATT_VOLT:
+            uint16_t mv = ((BattVoltage *)msg.Data)->volts_div_16;
+            Car.BatteryVoltage = (mv*62) + (mv>>1);
             break;
         default:
             xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);

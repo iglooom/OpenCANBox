@@ -27,6 +27,8 @@ typedef struct {
     uint8_t ActualGear;
     uint8_t ShifterPosition;
     int16_t BatteryCurrent;
+    uint8_t BatteryCharge;
+    uint16_t BatteryVoltage;
     int16_t CoolantTemp;
 } CarStatus;
 
@@ -148,6 +150,31 @@ typedef struct {
     uint8_t d7;
 } EngineTemp; // 2F0
 
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+
+    uint8_t volts_div_16;
+
+    uint8_t d6;
+    uint8_t d7;
+} BattVoltage; // 435
+
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t SoC:7;
+    uint8_t d7b0:1;
+} BattSoC; // 450
+
 #define CAN_DIAG_ID 0x707
 
 #define HSCAN_BCM_SWM 0x030
@@ -157,6 +184,8 @@ typedef struct {
 #define HSCAN_PCM_SHIFTER 0x0E0
 #define HSCAN_PCM_TEMP 0x2F0
 #define HSCAN_BMS 0x150
+#define HSCAN_BATT_VOLT 0x435
+#define HSCAN_BATT_SOC 0x450
 
 void can_setup(void);
 void CAN_Transmit(canMsg *msg);
