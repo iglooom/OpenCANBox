@@ -1,4 +1,0 @@
-/home/gl/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/home/gl/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/gl/Projects/ford/OpenCANBox -B /home/gl/Projects/ford/OpenCANBox/cmake-build-release
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /home/gl/Projects/ford/OpenCANBox/cmake-build-release
