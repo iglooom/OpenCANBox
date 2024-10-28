@@ -13,9 +13,14 @@
 #include <libopencm3/stm32/gpio.h>
 #include "string.h"
 #include <libopencmsis/core_cm3.h>
+#include "ipc_print.h"
 
 QueueHandle_t canTxQueue;
 QueueHandle_t canRxQueue;
+
+EventGroupHandle_t isotpEvGrp;
+volatile uint8_t BlockSize, SeparationTime;
+volatile uint16_t WaitFcIde;
 
 //TimerHandle_t canSleepTimer;
 
@@ -35,6 +40,7 @@ void can_setup()
     memset(&Cruise,0,sizeof(Cruise));
     canTxQueue = xQueueCreate( 5, sizeof(canMsg) );
     canRxQueue = xQueueCreate( 5, sizeof(canMsg) );
+    isotpEvGrp = xEventGroupCreate();
 //    canSleepTimer = xTimerCreate("canSleep",10000,pdFALSE,( void * ) 0,onCanIdle);
 
     rcc_periph_clock_enable(RCC_AFIO);
@@ -140,8 +146,8 @@ void can_setup()
     can_filter_id_list_16bit_init(
             2,
             (HSCAN_PCM_TEMP << 5),
-            (HSCAN_BATT_SOC << 5),
             (HSCAN_BATT_VOLT << 5),
+            (HSCAN_PCM_TEMP << 5),
             (HSCAN_PCM_TEMP << 5),
             0,
             true);
@@ -149,10 +155,10 @@ void can_setup()
     /* CAN filter 0 init. */
     can_filter_id_list_16bit_init(
             14,
-            (HSCAN_BCM_SWM << 5),
-            (HSCAN_BCM_SWM << 5),
-            (HSCAN_BCM_SWM << 5),
-            (CAN_DIAG_ID << 5),
+            (MMCAN_NAV_IPC_FC << 5),
+            (MMCAN_RDS_APIM_FC << 5),
+            (MMCAN_RDS_APIM_FC << 5),
+            (MMCAN_RDS_APIM_FC << 5),
             0,
             true);
 
@@ -212,12 +218,10 @@ static void can_rx_isr(uint32_t canport)
         case HSCAN_PCM_TEMP:
             Car.CoolantTemp = ((int16_t)((EngineTemp *)msg.Data)->CoolantTemp) - 60;
             break;
-        case HSCAN_BATT_SOC:
-            Car.BatteryCharge = ((BattSoC*)msg.Data)->SoC;
-            break;
         case HSCAN_BATT_VOLT:
             uint16_t mv = ((BattVoltage *)msg.Data)->volts_div_16;
             Car.BatteryVoltage = (mv*62) + (mv>>1);
+            Car.BatteryCharge = ((BattVoltage*)msg.Data)->SoC;
             break;
         default:
             xQueueSendFromISR(canRxQueue,&msg,&xTaskWokenByReceive);
@@ -234,7 +238,14 @@ void usb_lp_can_rx0_isr(void)
 
 void can2_rx0_isr(void)
 {
-    can_rx_isr(CAN2);
+    //can_rx_isr(CAN2);
+
+    bool ext, rtr;
+    uint8_t fmi;
+    canMsg msg;
+
+    can_receive(CAN2, 0, true, (uint32_t*)&msg.Id, &ext, &rtr, &fmi, &msg.DLC, msg.Data, NULL);
+    isotp_fc_cb(&msg);
 }
 
 void can_rx_task(void *arg)
@@ -276,4 +287,51 @@ void can_tx_task(void *arg)
 void CAN_Transmit(canMsg *msg)
 {
     xQueueSend(canTxQueue,msg,50);
+}
+
+void isotp_send(uint16_t txId, uint16_t fcId, uint8_t* data, uint16_t len)
+{
+    canMsg msg;
+    uint8_t sendCntr, CfCntr;
+
+    msg.CanPort = CAN2;
+    msg.Id = txId;
+    msg.DLC = 8;
+    msg.Data[0] = (1<<4) + ((len>>8)&0xF);
+    msg.Data[1] = (len & 0xFF);
+    memcpy(&msg.Data[2],data,6);
+    sendCntr = 6;
+
+    WaitFcIde = fcId;
+    SeparationTime = 20;
+    xEventGroupClearBits(isotpEvGrp,FC_Received);
+    xQueueSend(canTxQueue,&msg,300);
+
+    if( WaitFcIde == 0 || (xEventGroupWaitBits(isotpEvGrp,FC_Received,pdTRUE,pdFALSE,300) & FC_Received)){
+        msg.Delay = SeparationTime;
+        CfCntr = 1;
+        while(sendCntr < len){
+            msg.Data[0] = (2<<4) + (CfCntr&0xF);
+            CfCntr++;
+            if(len - sendCntr >= 7){
+                memcpy(&msg.Data[1],&data[sendCntr],7);
+                sendCntr+=7;
+            }else{
+                memset(&msg.Data[1],0x0,7);
+                uint8_t last = len - sendCntr;
+                memcpy(&msg.Data[1],&data[sendCntr],last);
+                sendCntr+=last;
+            }
+            xQueueSend(canTxQueue,&msg,300);
+        }
+    }
+}
+
+void isotp_fc_cb(canMsg *msg)
+{
+    if (msg->Data[0] == 0x30 && msg->Id == WaitFcIde) { // FlowControl ContinueToSend
+        BlockSize = msg->Data[1];
+        SeparationTime = msg->Data[2]&0x7F;
+        xEventGroupSetBits(isotpEvGrp, FC_Received);
+    }
 }

@@ -3,11 +3,14 @@
 #include "main.h"
 #include "can.h"
 #include "gpio.h"
+#include "ipc_print.h"
 
 
 #ifndef NDEBUG
 extern void initialise_monitor_handles(void);
 #endif
+
+extern volatile CarStatus Car;
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName ){
     ( void ) xTask; ( void ) pcTaskName;
@@ -16,8 +19,13 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName ){
 
 static void blink_led(void *arg __attribute((unused))) {
     for (;;) {
+//        if(Car.ShifterPosition == 1){
+//            LED1_ON();
+//        }else{
+//            LED1_OFF();
+//        }
         LED1_TOGGLE();
-        vTaskDelay(1000);
+        vTaskDelay(500);
     }
 }
 
@@ -29,7 +37,8 @@ int main() {
 
     gpio_setup();
     can_setup();
-   // xTaskCreate(blink_led, "blink", 128, NULL, configMAX_PRIORITIES-3, NULL);
+    ipc_print_init();
+    xTaskCreate(blink_led, "blink", 128, NULL, configMAX_PRIORITIES-3, NULL);
 
     vTaskStartScheduler();
 }

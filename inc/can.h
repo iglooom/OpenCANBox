@@ -72,8 +72,8 @@ typedef struct {
     uint8_t d0b7:1;
 
     uint8_t d1b0:5;
-    uint8_t Ignition:2; // 1 - Ignition ON, 3 - Accessory?
-    uint8_t d1b7:1;
+    uint8_t Ignition:1; // 1 - Ignition ON, 3 - Accessory?
+    uint8_t d1b7:2;
 
     uint8_t d2;
     uint8_t d3;
@@ -160,20 +160,9 @@ typedef struct {
     uint8_t volts_div_16;
 
     uint8_t d6;
-    uint8_t d7;
-} BattVoltage; // 435
-
-typedef struct {
-    uint8_t d0;
-    uint8_t d1;
-    uint8_t d2;
-    uint8_t d3;
-    uint8_t d4;
-    uint8_t d5;
-    uint8_t d6;
     uint8_t SoC:7;
     uint8_t d7b0:1;
-} BattSoC; // 450
+} BattVoltage; // 435
 
 #define CAN_DIAG_ID 0x707
 
@@ -185,7 +174,18 @@ typedef struct {
 #define HSCAN_PCM_TEMP 0x2F0
 #define HSCAN_BMS 0x150
 #define HSCAN_BATT_VOLT 0x435
-#define HSCAN_BATT_SOC 0x450
+
+#define MMCAN_NAV_APIM 0x2C0
+#define MMCAN_NAV_IPC_FC 0x2C8
+
+#define MMCAN_RDS_ACM 0x2B4
+#define MMCAN_RDS_APIM_FC 0x2BC
+
+#define APIM_FC (1 << 0)
+#define FC_Received (1 << 1)
+
+void isotp_send(uint16_t txId, uint16_t fcId, uint8_t* data, uint16_t len);
+void isotp_fc_cb(canMsg *msg);
 
 void can_setup(void);
 void CAN_Transmit(canMsg *msg);
