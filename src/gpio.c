@@ -13,6 +13,8 @@ void gpio_setup()
 
     gpio_set_mode(LED1_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,LED1_Pin);
     gpio_set_mode(CAN_Drv_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,CAN_Drv_Pin);
+    gpio_set_mode(SW_OUT_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,SW_OUT_Pin);
+    SW_ON();
 }
 
 void CAN_Drv_EN()
@@ -38,4 +40,14 @@ void LED1_OFF()
 void LED1_TOGGLE()
 {
     gpio_toggle(LED1_GPIO_Port,LED1_Pin);
+}
+
+void SW_ON()
+{
+    gpio_set(SW_OUT_GPIO_Port,SW_OUT_Pin);
+}
+
+void SW_OFF()
+{
+    gpio_clear(SW_OUT_GPIO_Port,SW_OUT_Pin);
 }

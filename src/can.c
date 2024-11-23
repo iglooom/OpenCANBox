@@ -220,6 +220,11 @@ static void can_rx_isr(uint32_t canport)
             break;
         case HSCAN_PCM_SHIFTER:
             Car.ShifterPosition = ((PcmShifter*)msg.Data)->ShifterPos;
+            if(Car.ShifterPosition == 1){
+                SW_ON();
+            }else{
+                SW_OFF();
+            }
             break;
         case HSCAN_BMS:
             Car.BatteryCurrent = (int16_t)(((uint16_t)(((BatCurrent*)msg.Data)->CurrentH)<<4) + ((BatCurrent*)msg.Data)->CurrentL - 512);
