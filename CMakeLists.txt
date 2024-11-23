@@ -42,11 +42,16 @@ include_directories(
 
 #add_subdirectory(src)
 
-add_definitions(-DDEBUG)
+#add_definitions(-DDEBUG)
 
 file(GLOB_RECURSE SOURCES "src/*.*" "inc/*.*" "libs/*.*")
 
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/linker.ld)
+if (BOOTLOADER)
+    MESSAGE(STATUS "Compile for Bootloader")
+    set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/linkerbl.ld)
+else()
+    set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/linker.ld)
+endif()
 
 add_link_options(-nostartfiles -lc -lnosys -mthumb -mcpu=cortex-m3)
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map,--cref,--gc-sections)

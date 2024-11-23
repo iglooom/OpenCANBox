@@ -27,7 +27,7 @@ MEMORY
 {
 	/* RAM is always used */
 	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 64K
-	rom (rx) : ORIGIN = 0x8000000, LENGTH = 128K
+	rom (rx) : ORIGIN = 0x8001800, LENGTH = 128K
 }
 
 INCLUDE cortex-m-generic.ld

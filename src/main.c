@@ -4,6 +4,7 @@
 #include "can.h"
 #include "gpio.h"
 #include "ipc_print.h"
+#include "libopencmsis/core_cm3.h"
 
 
 #ifndef NDEBUG
@@ -30,7 +31,12 @@ static void blink_led(void *arg __attribute((unused))) {
 }
 
 int main() {
+#ifdef BOOTLOADER
+    __disable_irq();
+    SCB->VTOR = 0x8001800;
+    __enable_irq();
     rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_HSE25_72MHZ]);
+#endif
 #ifndef NDEBUG
     initialise_monitor_handles();
 #endif
