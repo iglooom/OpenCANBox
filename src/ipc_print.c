@@ -16,7 +16,7 @@ void ipc_print_task(void *arg __attribute((unused)))
     uint8_t disp[] = { 0x22, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
     for (;;) {
-        if(Car.Ignition) {
+        if(Car.Ignition && !Car.NavInfoPresent) {
             memset(txt,0,sizeof(txt));
             // only 16 chars fit
             sprintf(txt, "%d\xB0 %d%% %dA %d.%dV", Car.CoolantTemp, Car.BatteryCharge, Car.BatteryCurrent, Car.BatteryVoltage / 1000, Car.BatteryVoltage%1000/100);

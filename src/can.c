@@ -12,8 +12,10 @@
 #include <libopencm3/stm32/can.h>
 #include <libopencm3/stm32/gpio.h>
 #include "string.h"
+#include <libopencm3/stm32/iwdg.h>
 #include <libopencmsis/core_cm3.h>
 #include "ipc_print.h"
+
 
 QueueHandle_t canTxQueue;
 QueueHandle_t canRxQueue;
@@ -22,17 +24,23 @@ EventGroupHandle_t isotpEvGrp;
 volatile uint8_t BlockSize, SeparationTime;
 volatile uint16_t WaitFcIde;
 
+TimerHandle_t   navInfoTimeout;
 //TimerHandle_t canSleepTimer;
 
 void can_tx_task(void *arg);
 void can_rx_task(void *arg);
 
 volatile CruiseState Cruise;
-volatile CarStatus Car;
+volatile CarStatus Car = {0};
 
 void onCanIdle()
 {
     CAN_Drv_Slp();
+}
+
+void onNavInfoTimeout()
+{
+    Car.NavInfoPresent = 0;
 }
 
 void can_setup()
@@ -42,6 +50,7 @@ void can_setup()
     canRxQueue = xQueueCreate( 5, sizeof(canMsg) );
     isotpEvGrp = xEventGroupCreate();
 //    canSleepTimer = xTimerCreate("canSleep",10000,pdFALSE,( void * ) 0,onCanIdle);
+    navInfoTimeout = xTimerCreate("navInfoTimeout",3000,pdFALSE,( void * ) 0,onNavInfoTimeout);
 
     rcc_periph_clock_enable(RCC_AFIO);
     rcc_periph_clock_enable(RCC_CAN1);
@@ -156,9 +165,9 @@ void can_setup()
     can_filter_id_list_16bit_init(
             14,
             (MMCAN_NAV_IPC_FC << 5),
-            (MMCAN_RDS_APIM_FC << 5),
-            (MMCAN_RDS_APIM_FC << 5),
-            (MMCAN_RDS_APIM_FC << 5),
+            (MMCAN_APIM_LIGHT << 5),
+            (MMCAN_ACM_EQ_SET << 5),
+            (MMCAN_NAV_APIM << 5),
             0,
             true);
 
@@ -238,14 +247,14 @@ void usb_lp_can_rx0_isr(void)
 
 void can2_rx0_isr(void)
 {
-    //can_rx_isr(CAN2);
-
-    bool ext, rtr;
-    uint8_t fmi;
-    canMsg msg;
-
-    can_receive(CAN2, 0, true, (uint32_t*)&msg.Id, &ext, &rtr, &fmi, &msg.DLC, msg.Data, NULL);
-    isotp_fc_cb(&msg);
+    can_rx_isr(CAN2);
+//
+//    bool ext, rtr;
+//    uint8_t fmi;
+//    canMsg msg;
+//
+//    can_receive(CAN2, 0, true, (uint32_t*)&msg.Id, &ext, &rtr, &fmi, &msg.DLC, msg.Data, NULL);
+//    isotp_fc_cb(&msg);
 }
 
 void can_rx_task(void *arg)
@@ -260,9 +269,41 @@ void can_rx_task(void *arg)
                 case HSCAN_BCM_SWM:
                     fixACCbuttons(&msg);
                     break;
-                case 0x707:
-                    LED1_TOGGLE();
-                    msg.Id = 0x70F;
+                case MMCAN_APIM_LIGHT:
+                    eqPresets(&msg);
+                    break;
+                case MMCAN_NAV_APIM:
+                    Car.NavInfoPresent = 1;
+                    xTimerReset(navInfoTimeout,100);
+                    break;
+                case CAN_DIAG_ID:
+                    switch (msg.Data[1]) {
+                        case 0x11: // ECUReset
+                            if(msg.Data[2] == 0x01){
+                                iwdg_start();
+                                msg.Data[0] = 0x02;
+                                msg.Data[1] = 0x51;
+                                msg.Data[2] = 0x01;
+                            }else {
+                                msg.Data[0] = 0x02;
+                                msg.Data[1] = 0x7F;
+                                msg.Data[2] = 0x12; // subFunctionNotSupported
+                            }
+                            break;
+                        case 0x3E: // TesterPresent
+                            msg.Data[0] = 0x02;
+                            msg.Data[1] = 0x7E;
+                            msg.Data[2] = 0x00;
+                            break;
+                        default:
+                            msg.Data[0] = 0x02;
+                            msg.Data[1] = 0x7F;
+                            msg.Data[2] = 0x11; // serviceNotSupported
+                            break;
+                    }
+                    memset(&msg.Data[3],0,5);
+                    msg.Id = CAN_DIAG_RESP_ID;
+                    msg.DLC = 8;
                     xQueueSend(canTxQueue,&msg,10);
                     break;
             }

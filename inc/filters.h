@@ -7,5 +7,6 @@
 #include "main.h"
 
 void fixACCbuttons(canMsg *msg);
+void eqPresets(canMsg *msg);
 
 #endif //OPENCANBOX_FILTERS_H

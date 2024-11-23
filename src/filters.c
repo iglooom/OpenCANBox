@@ -7,8 +7,12 @@
 #include "can.h"
 #include "filters.h"
 #include "gpio.h"
+#include "event_groups.h"
+#include <libopencm3/stm32/can.h>
 
 extern volatile CruiseState Cruise;
+extern EventGroupHandle_t stateChanges;
+extern CarStatus Car;
 
 void fixACCbuttons(canMsg *msg)
 {
@@ -51,5 +55,28 @@ void fixACCbuttons(canMsg *msg)
         }
     }else{
         ResPlus_Pressed = 0;
+    }
+}
+
+void eqPresets(canMsg *msg) {
+    static uint8_t eqPreset = 0;
+
+    uint8_t eq = (msg->Data[0]>>4)&0x7;
+
+    uint8_t map[8] = { 0, 0, 0, 0x08,0x20,0x10,0x18,0x28};
+
+    if(eq != 0 && eqPreset != eq){
+        msg->Id = MMCAN_ACM_EQ_SET;
+        msg->DLC = 8;
+        msg->Delay = 10;
+        msg->CanPort = CAN2;
+        memset(msg->Data,0,8);
+        msg->Data[3] = 0xF8;
+
+        uint8_t setEq = map[eq];
+        if(setEq){
+            msg->Data[1] = setEq;
+            CAN_Transmit(msg);
+        }
     }
 }

@@ -30,6 +30,8 @@ typedef struct {
     uint8_t BatteryCharge;
     uint16_t BatteryVoltage;
     int16_t CoolantTemp;
+
+    uint8_t NavInfoPresent;
 } CarStatus;
 
 // ACC - Adaptive cruise buttons
@@ -165,6 +167,7 @@ typedef struct {
 } BattVoltage; // 435
 
 #define CAN_DIAG_ID 0x707
+#define CAN_DIAG_RESP_ID 0x70F
 
 #define HSCAN_BCM_SWM 0x030
 #define HSCAN_PCM_SPD 0x060
@@ -176,6 +179,9 @@ typedef struct {
 #define HSCAN_BATT_VOLT 0x435
 
 #define MMCAN_NAV_APIM 0x2C0
+#define MMCAN_APIM_LIGHT 0x3DA
+#define MMCAN_ACM_EQ_SET 0x1DC
+#define MMCAN_ACM_STATUS 0x2D9
 #define MMCAN_NAV_IPC_FC 0x2C8
 
 #define MMCAN_RDS_ACM 0x2B4
