@@ -169,6 +169,7 @@ typedef struct {
 #define CAN_DIAG_ID 0x707
 #define CAN_DIAG_RESP_ID 0x70F
 
+#define HSCAN_TSR 0x1B5
 #define HSCAN_BCM_SWM 0x030
 #define HSCAN_PCM_SPD 0x060
 #define HSCAN_PCM_STATUS 0x0C0

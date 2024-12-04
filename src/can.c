@@ -264,6 +264,7 @@ void can2_rx0_isr(void)
 
 void can_rx_task(void *arg)
 {
+    static uint8_t tsrFixed = 0;
     canMsg msg;
 
     for(;;)
@@ -273,6 +274,10 @@ void can_rx_task(void *arg)
             switch (msg.Id){
                 case HSCAN_BCM_SWM:
                     fixACCbuttons(&msg);
+                    if(!tsrFixed){
+                        tsrFixed = 1;
+                        fixTSR(50,10);
+                    }
                     break;
                 case MMCAN_APIM_LIGHT:
                     eqPresets(&msg);

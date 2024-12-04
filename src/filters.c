@@ -80,3 +80,20 @@ void eqPresets(canMsg *msg) {
         }
     }
 }
+
+void fixTSR(uint32_t delay, uint8_t rep) {
+    canMsg msg;
+
+    msg.Id = HSCAN_TSR;
+    msg.DLC = 8;
+    msg.CanPort = CAN1;
+    msg.Delay = 0;
+
+    uint8_t data[8] = { 0x00, 0x00, 0x01, 0xD7, 0x6A, 0xB8, 0x32, 0xFC };
+    memcpy(msg.Data,data,8);
+
+    for (uint8_t i = 0; i < rep; i++) {
+        CAN_Transmit(&msg);
+        vTaskDelay(pdMS_TO_TICKS(delay));
+    }
+}
