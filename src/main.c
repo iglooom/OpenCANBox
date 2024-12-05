@@ -35,11 +35,11 @@ int main() {
     __disable_irq();
     SCB->VTOR = 0x8001800;
     __enable_irq();
-    rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_HSE25_72MHZ]);
 #endif
 #ifndef NDEBUG
     initialise_monitor_handles();
 #endif
+    rcc_clock_setup_pll(&rcc_hsi_configs[RCC_CLOCK_HSE25_72MHZ]);
 
     gpio_setup();
     can_setup();
