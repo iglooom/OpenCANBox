@@ -74,7 +74,7 @@ void can_setup()
     nvic_set_priority(NVIC_USB_LP_CAN_RX0_IRQ, 1);
 
     // CAN2
-    AFIO_MAPR |= AFIO_MAPR_CAN2_REMAP;
+    gpio_primary_remap(AFIO_MAPR_SWJ_CFG_FULL_SWJ, AFIO_MAPR_CAN2_REMAP);
 
     /* Configure CAN2 pin: RX (input pull-up). */
     gpio_set_mode(GPIO_BANK_CAN2_RE_RX, GPIO_MODE_INPUT,
@@ -118,7 +118,7 @@ void can_setup()
                  false,           /* TTCM: Time triggered comm mode? */
                  true,            /* ABOM: Automatic bus-off management? */
                  true,           /* AWUM: Automatic wakeup mode? */
-                 false,           /* NART: No automatic retransmission? */
+                 true,           /* NART: No automatic retransmission? */
                  false,           /* RFLM: Receive FIFO locked mode? */
                  true,           /* TXFP: Transmit FIFO priority? */
                  CAN_BTR_SJW_1TQ,
