@@ -14,7 +14,9 @@ void gpio_setup()
     gpio_set_mode(LED1_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,LED1_Pin);
     gpio_set_mode(CAN_Drv_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,CAN_Drv_Pin);
     gpio_set_mode(SW_OUT_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_PUSHPULL,SW_OUT_Pin);
+    gpio_set_mode(SW2_OUT_GPIO_Port,GPIO_MODE_OUTPUT_2_MHZ,GPIO_CNF_OUTPUT_OPENDRAIN,SW2_OUT_Pin);
     SW_ON();
+    SW2_OFF();
 }
 
 void CAN_Drv_EN()
@@ -50,4 +52,14 @@ void SW_ON()
 void SW_OFF()
 {
     gpio_clear(SW_OUT_GPIO_Port,SW_OUT_Pin);
+}
+
+void SW2_ON()
+{
+    gpio_set(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
+}
+
+void SW2_OFF()
+{
+    gpio_clear(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
 }

@@ -16,6 +16,9 @@
 #define SW_OUT_Pin GPIO10
 #define SW_OUT_GPIO_Port GPIOC
 
+#define SW2_OUT_Pin GPIO11
+#define SW2_OUT_GPIO_Port GPIOC
+
 void gpio_setup(void);
 
 void LED1_ON();
@@ -27,5 +30,8 @@ void CAN_Drv_Slp();
 
 void SW_ON();
 void SW_OFF();
+
+void SW2_ON();
+void SW2_OFF();
 
 #endif //GSMCAN_GPIO_H

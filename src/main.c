@@ -20,6 +20,11 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName ){
 
 static void blink_led(void *arg __attribute((unused))) {
     for (;;) {
+        if(Car.AudioIsOn || Car.Ignition){
+            SW2_ON();
+        }else{
+            SW2_OFF();
+        }
 //        if(Car.ShifterPosition == 1){
 //            LED1_ON();
 //        }else{

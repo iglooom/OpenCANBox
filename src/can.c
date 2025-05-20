@@ -171,6 +171,15 @@ void can_setup()
             0,
             true);
 
+    can_filter_id_list_16bit_init(
+            15,
+            (MMCAN_BDY_INFO << 5),
+            (MMCAN_ACM_AUDIO << 5),
+            (MMCAN_ACM_AUDIO << 5),
+            (MMCAN_ACM_AUDIO << 5),
+            0,
+            true);
+
     /* Enable CAN RX interrupt. */
     can_enable_irq(CAN1, CAN_IER_FMPIE0);
     can_enable_irq(CAN2, CAN_IER_FMPIE0);
@@ -192,12 +201,18 @@ static void can_rx_isr(uint32_t canport)
 
     msg.CanPort = canport;
     switch (msg.Id) {
+        case MMCAN_ACM_AUDIO:
+            Car.AudioIsOn = ((AcmAudio*)msg.Data)->audio_on;
+            break;
+        case MMCAN_BDY_INFO:
+            Car.Ignition = ((BdyState*)msg.Data)->ignition > 0;
+            break;
         case HSCAN_PCM_SPD:
             Cruise.SetSpeed = ((CruiseSpeed*)msg.Data)->Speed;
             break;
         case HSCAN_PCM_STATUS:
             Cruise.StandBy = ((PCMStatus*)msg.Data)->Cruise_StandBy;
-            Car.Ignition = (((PCMStatus*)msg.Data)->Ignition&1);
+            //Car.Ignition = (((PCMStatus*)msg.Data)->Ignition&1);
             switch (((PCMStatus*)msg.Data)->Cruise_Mode) {
                 case 1:
                     Cruise.CruiseMode = 1;

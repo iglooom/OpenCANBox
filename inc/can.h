@@ -31,6 +31,7 @@ typedef struct {
     uint16_t BatteryVoltage;
     int16_t CoolantTemp;
 
+    uint8_t AudioIsOn;
     uint8_t NavInfoPresent;
 } CarStatus;
 
@@ -166,6 +167,31 @@ typedef struct {
     uint8_t d7b0:1;
 } BattVoltage; // 435
 
+typedef struct {
+    uint8_t d0;
+    uint8_t d1;
+    uint8_t d2_5:3;
+    uint8_t audio_on:1;
+    uint8_t d2_0:4;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} AcmAudio; // 1E6
+
+typedef struct {
+    uint8_t d0_2:6;
+    uint8_t ignition:2; // 2 - crank, 1 - ignition
+    uint8_t d1;
+    uint8_t d2;
+    uint8_t d3;
+    uint8_t d4;
+    uint8_t d5;
+    uint8_t d6;
+    uint8_t d7;
+} BdyState; // 1E6
+
 #define CAN_DIAG_ID 0x707
 #define CAN_DIAG_RESP_ID 0x70F
 
@@ -183,6 +209,8 @@ typedef struct {
 #define MMCAN_ACM_EQ_SET 0x1DC
 #define MMCAN_ACM_STATUS 0x2D9
 #define MMCAN_NAV_IPC_FC 0x2C8
+#define MMCAN_ACM_AUDIO  0x1E6
+#define MMCAN_BDY_INFO   0x3B3
 
 #define MMCAN_RDS_ACM 0x2B4
 #define MMCAN_RDS_APIM_FC 0x2BC
