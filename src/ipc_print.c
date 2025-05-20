@@ -7,6 +7,7 @@
 #include "stdio.h"
 
 extern CarStatus Car;
+TaskHandle_t ipc_print_task_handle;
 
 void ipc_print_task(void *arg __attribute((unused)))
 {
@@ -16,7 +17,7 @@ void ipc_print_task(void *arg __attribute((unused)))
     uint8_t disp[] = { 0x22, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
     for (;;) {
-        if(Car.Ignition && !Car.NavInfoPresent) {
+        if(Car.Ignition) {//&& !Car.NavInfoPresent) {
             memset(txt,0,sizeof(txt));
             // only 16 chars fit
             sprintf(txt, "%d\xB0 %d%% %dA %d.%dV", Car.CoolantTemp, Car.BatteryCharge, Car.BatteryCurrent, Car.BatteryVoltage / 1000, Car.BatteryVoltage%1000/100);
@@ -40,7 +41,10 @@ void ipc_print_task(void *arg __attribute((unused)))
 
 void ipc_print_init()
 {
-    xTaskCreate(ipc_print_task, "ipc_print", 256, NULL, configMAX_PRIORITIES-3, NULL);
+    xTaskCreate(ipc_print_task, "ipc_print", 256, NULL, configMAX_PRIORITIES-3, &ipc_print_task_handle);
 }
 
-
+void ipc_print_stop()
+{
+    vTaskSuspend(ipc_print_task_handle);
+}

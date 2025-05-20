@@ -299,6 +299,7 @@ void can_rx_task(void *arg)
                             msg.Data[0] = 0x02;
                             msg.Data[1] = 0x7E;
                             msg.Data[2] = 0x00;
+                            ipc_print_stop();
                             break;
                         default:
                             msg.Data[0] = 0x02;
