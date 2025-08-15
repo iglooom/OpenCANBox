@@ -33,6 +33,8 @@ typedef struct {
 
     uint8_t AudioIsOn;
     uint8_t NavInfoPresent;
+
+    uint8_t IOControl;
 } CarStatus;
 
 // ACC - Adaptive cruise buttons
@@ -190,7 +192,7 @@ typedef struct {
     uint8_t d5;
     uint8_t d6;
     uint8_t d7;
-} BdyState; // 1E6
+} BdyState; // 3B3
 
 #define CAN_DIAG_ID 0x707
 #define CAN_DIAG_RESP_ID 0x70F
@@ -216,7 +218,12 @@ typedef struct {
 #define MMCAN_RDS_APIM_FC 0x2BC
 
 #define APIM_FC (1 << 0)
+// Flow Control
 #define FC_Received (1 << 1)
+// First Frame
+#define NAV_FF_Received (1 << 2)
+// Consecutive Frame
+#define NAV_CF_Received (1 << 3)
 
 void isotp_send(uint16_t txId, uint16_t fcId, uint8_t* data, uint16_t len);
 void isotp_fc_cb(canMsg *msg);

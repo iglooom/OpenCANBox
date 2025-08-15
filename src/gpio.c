@@ -56,10 +56,10 @@ void SW_OFF()
 
 void SW2_ON()
 {
-    gpio_set(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
+    gpio_clear(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
 }
 
 void SW2_OFF()
 {
-    gpio_clear(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
+    gpio_set(SW2_OUT_GPIO_Port,SW2_OUT_Pin);
 }

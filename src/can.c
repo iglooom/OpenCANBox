@@ -50,7 +50,7 @@ void can_setup()
     canRxQueue = xQueueCreate( 5, sizeof(canMsg) );
     isotpEvGrp = xEventGroupCreate();
 //    canSleepTimer = xTimerCreate("canSleep",10000,pdFALSE,( void * ) 0,onCanIdle);
-    navInfoTimeout = xTimerCreate("navInfoTimeout",3000,pdFALSE,( void * ) 0,onNavInfoTimeout);
+    navInfoTimeout = xTimerCreate("navInfoTimeout",6000,pdFALSE,( void * ) 0,onNavInfoTimeout);
 
     rcc_periph_clock_enable(RCC_AFIO);
     rcc_periph_clock_enable(RCC_CAN1);
@@ -295,6 +295,14 @@ void can_rx_task(void *arg)
                 case MMCAN_NAV_APIM:
                     Car.NavInfoPresent = 1;
                     xTimerReset(navInfoTimeout,100);
+                    switch (msg.Data[0]>>4) {
+                        case 1:
+                            xEventGroupSetBits(isotpEvGrp, NAV_FF_Received);
+                            break;
+                        case 2:
+                            xEventGroupSetBits(isotpEvGrp, NAV_CF_Received);
+                            break;
+                    }
                     break;
                 case CAN_DIAG_ID:
                     switch (msg.Data[1]) {
@@ -316,13 +324,34 @@ void can_rx_task(void *arg)
                             msg.Data[2] = 0x00;
                             ipc_print_stop();
                             break;
+                        case 0x2F: // InputOutputControlByIdentifier
+                            msg.Data[0] = 0x04;
+                            msg.Data[1] = 0x6F;
+                            switch(msg.Data[3]){
+                                case 01:
+                                    Car.IOControl = 1;
+                                    if(msg.Data[4]){
+                                        SW2_ON();
+                                        msg.Data[4] = 1;
+                                    }else{
+                                        SW2_OFF();
+                                        msg.Data[4] = 0;
+                                    }
+                                    break;
+                                default:
+                                    Car.IOControl = 0;
+                                    msg.Data[0] = 0x02;
+                                    msg.Data[1] = 0x7F;
+                                    msg.Data[2] = 0x12; // subFunctionNotSupported
+                            }
+                            break;
                         default:
                             msg.Data[0] = 0x02;
                             msg.Data[1] = 0x7F;
                             msg.Data[2] = 0x11; // serviceNotSupported
                             break;
                     }
-                    memset(&msg.Data[3],0,5);
+                    //memset(&msg.Data[3],0,5);
                     msg.Id = CAN_DIAG_RESP_ID;
                     msg.DLC = 8;
                     xQueueSend(canTxQueue,&msg,10);
